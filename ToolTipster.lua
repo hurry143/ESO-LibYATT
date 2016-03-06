@@ -37,14 +37,14 @@ local HOOKS = {
 --
 -- @param control the item tooltip control to modify.
 -- @param link    the itemlink of the item.
-local function ShowToolTip(control, link)
+local function showToolTip(control, link)
   for name, module in pairs(ToolTipster.submodules) do
     module.ShowToolTip(control, link);
   end
 end
 
 -- Inserts hooks into all applicable occurrences of item tooltips.
-local function SetupToolTipHooks()
+local function setupToolTipHooks()
   for i = 1, #HOOKS do
     local control = HOOKS[i][1];
     local method = HOOKS[i][2];
@@ -52,11 +52,11 @@ local function SetupToolTipHooks()
     local origMethod = control[method];
     
     -- Redefine the original method so that it makes an additional
-    -- call to ShowToolTip().
+    -- call to showToolTip().
     control[method] = function(self, ...)
         origMethod(self, ...);
         local itemLink = linkFunc(...);
-        ShowToolTip(control, itemLink);
+        showToolTip(control, itemLink);
     end
   end
 end
@@ -65,13 +65,13 @@ end
 --
 -- @param event     the EVENT_ADD_ON_LOADED object.
 -- @param addonName the name of the addon.
-local function OnAddOnLoaded(event, addonName)
+local function onAddOnLoaded(event, addonName)
   -- Do nothing if it's some other addon that was loaded.
   if (addonName ~= TT.name) then
     return;
   end
   
-  SetupToolTipHooks();
+  setupToolTipHooks();
   EVENT_MANAGER:UnregisterForUpdate(EVENT_ADD_ON_LOADED);
 end
 
@@ -88,7 +88,7 @@ end
 --
 -- @param   itemLink  the link for the item.
 -- @return  the generated index.
-function ToolTipster.createItemIndex(itemLink)
+function ToolTipster.CreateItemIndex(itemLink)
   local itemId = select(4, ZO_LinkHandler_ParseLink(itemLink));
   local level = GetItemLinkRequiredLevel(itemLink);
   local vRank = GetItemLinkRequiredVeteranRank(itemLink);
@@ -109,4 +109,4 @@ end
 -- REGISTER WITH THE GAME'S EVENTS
 ------------------------------------------------------------
 
-EVENT_MANAGER:RegisterForEvent(TT.name, EVENT_ADD_ON_LOADED, OnAddOnLoaded);
+EVENT_MANAGER:RegisterForEvent(TT.name, EVENT_ADD_ON_LOADED, onAddOnLoaded);
