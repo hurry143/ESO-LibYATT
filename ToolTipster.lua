@@ -39,7 +39,7 @@ local HOOKS = {
 -- @param link    the itemlink of the item.
 local function showToolTip(control, link)
   for name, module in pairs(ToolTipster.submodules) do
-    module.ShowToolTip(control, link);
+    module:ShowToolTip(control, link);
   end
 end
 
