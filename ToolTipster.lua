@@ -22,6 +22,7 @@ local HOOKS = {
   { ItemTooltip, 'SetTradingHouseItem', GetTradingHouseSearchResultItemLink },
   { ItemTooltip, 'SetTradingHouseListing', GetTradingHouseListingItemLink },
   { ItemTooltip, 'SetQuestReward', GetQuestRewardItemLink },
+  { ItemTooltip, 'SetLink', function(itemLink) return itemLink end },
   { PopupTooltip, 'SetLink', function(itemLink) return itemLink end },
   { ZO_AlchemyTopLevelTooltip, 'SetPendingAlchemyItem', GetAlchemyResultingItemLink },
   { ZO_SmithingTopLevelCreationPanelResultTooltip, 'SetPendingSmithingItem', GetSmithingPatternResultLink },
@@ -39,7 +40,9 @@ local HOOKS = {
 -- @param link    the itemlink of the item.
 local function showToolTip(control, link)
   for name, module in pairs(ToolTipster.submodules) do
-    module:ShowToolTip(control, link);
+    if type(module.ShowToolTip) == 'function' then
+      module:ShowToolTip(control, link);
+    end
   end
 end
 
