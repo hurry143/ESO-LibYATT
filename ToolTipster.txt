@@ -1,7 +1,0 @@
-## Title: ToolTipster
-## Version: 0.5.0
-## Author: hurry143
-## Description:
-## APIVersion: 100014
-
-ToolTipster.lua

@@ -1,16 +1,13 @@
-------------------------------------------------------------
--- NAMESPACE INITIALIZATION
-------------------------------------------------------------
-ToolTipster = {};
-ToolTipster.name = 'ToolTipster';
-ToolTipster.accountData = nil;
-ToolTipster.charData = nil;
-ToolTipster.submodules = {};
+local MAJOR, MINOR = 'ToolTipster', 1;
+local TT, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
+-- Do not load this file if the same version (or newer) of the library has been found.
+if not TT then
+  return;
+end
 
 ------------------------------------------------------------
--- LOCAL CONSTANTS
+-- PRIVATE CONSTANTS
 ------------------------------------------------------------
-local TT = ToolTipster;
 local HOOKS = {
   { ItemTooltip, 'SetBagItem', GetItemLink },
   { ItemTooltip, 'SetWornItem', function(equipSlot) return GetItemLink(BAG_WORN, equipSlot) end },
@@ -29,33 +26,42 @@ local HOOKS = {
   { ZO_SmithingTopLevelImprovementPanelResultTooltip, 'SetSmithingImprovementResult', GetSmithingImprovedItemLink }
 };
 
+local EVENTS = {
+  TT_EVENT_ITEM_TOOLTIP = 'TT_EVENT_ITEM_TOOLTIP',
+};
+TT.events = EVENTS;
+
+------------------------------------------------------------
+-- PRIVATE VARIABLES
+------------------------------------------------------------
+local CM = ZO_CallbackObject:New(); -- our custom callback manager.
+
 ------------------------------------------------------------
 -- PRIVATE METHODS
 ------------------------------------------------------------
 
--- Allows the submodules to insert their respective tips into
--- an item's tooltip.
+------------------------------------------------------------
+-- Fires an event to notify registered listeners that an item tooltip
+-- has been opened and ready to be modified.
 --
 -- @param control the item tooltip control to modify.
 -- @param link    the itemlink of the item.
 local function showToolTip(control, link)
-  for name, module in pairs(ToolTipster.submodules) do
-    if type(module.ShowToolTip) == 'function' then
-      module:ShowToolTip(control, link);
-    end
-  end
+  -- For now, just fire off the callbacks.
+  CM:FireCallbacks(EVENTS.TT_EVENT_ITEM_TOOLTIP, control, link);
 end
 
+------------------------------------------------------------
 -- Inserts hooks into all applicable occurrences of item tooltips.
 local function setupToolTipHooks()
   for i = 1, #HOOKS do
-    local control = HOOKS[i][1];
-    local method = HOOKS[i][2];
-    local linkFunc = HOOKS[i][3];
-    local origMethod = control[method];
+    local control = HOOKS[i][1];        -- the tooltip control 
+    local method = HOOKS[i][2];         -- the name of the method we're hooking into
+    local linkFunc = HOOKS[i][3];       -- generates an itemLink from the method's arguments
     
     -- Redefine the original method so that it makes an additional
     -- call to showToolTip().
+    local origMethod = control[method];
     control[method] = function(self, ...)
         origMethod(self, ...);
         local itemLink = linkFunc(...);
@@ -64,24 +70,11 @@ local function setupToolTipHooks()
   end
 end
 
--- This method is called whenever any addon is loaded.
---
--- @param event     the EVENT_ADD_ON_LOADED object.
--- @param addonName the name of the addon.
-local function onAddOnLoaded(event, addonName)
-  -- Do nothing if it's some other addon that was loaded.
-  if (addonName ~= TT.name) then
-    return;
-  end
-  
-  setupToolTipHooks();
-  EVENT_MANAGER:UnregisterForUpdate(EVENT_ADD_ON_LOADED);
-end
-
 ------------------------------------------------------------
--- PUBLIC METHODS
+-- PUBLIC UTILITY METHODS
 ------------------------------------------------------------
 
+------------------------------------------------------------
 -- Creates a 'unique' key that can be used to index items.
 -- The generated index should be general enough to identify
 -- items as being the same even if they come from different
@@ -91,7 +84,7 @@ end
 --
 -- @param   itemLink  the link for the item.
 -- @return  the generated index.
-function ToolTipster.CreateItemIndex(itemLink)
+function TT:CreateItemIndex(itemLink)
   local itemId = select(4, ZO_LinkHandler_ParseLink(itemLink));
   local level = GetItemLinkRequiredLevel(itemLink);
   local vRank = GetItemLinkRequiredVeteranRank(itemLink);
@@ -109,7 +102,101 @@ function ToolTipster.CreateItemIndex(itemLink)
 end
 
 ------------------------------------------------------------
--- REGISTER WITH THE GAME'S EVENTS
+-- Used for copying values to/from account-wide settings and
+-- character-specific settings. Useful as a callback for when
+-- the user toggles a 'Use settings for account' option in the
+-- settings menu.
+-- This method does not do a deepcopy and will only copy sub-tables
+-- one level deep.
+-- 
+-- @param isAccountWide if true, then values shall be copied from charSettings
+--                      to acctSettings, otherwise values shall be copied from
+--                      acctSettings to charSettings.
+-- @param acctSettings  a table containing the account-wide settings.
+-- @param charSettings  a table containing the character-specific settings.
+function TT:CopyAddonSettings(isAccountWide, acctSettings, charSettings)
+  local sourceSettings = charSettings;
+  local targetSettings = acctSettings;
+  
+  if not isAccountWide then
+    sourceSettings = acctSettings;
+    targetSettings = charSettings;
+  end
+  
+  for key, value in pairs(sourceSettings) do
+    if (type(value) == 'table') then
+      for t_key, t_value in pairs(value) do
+        targetSettings[key][t_key] = t_value;
+      end
+    else
+      targetSettings[key] = value;
+    end
+  end
+end
+
+------------------------------------------------------------
+-- Adds a character name to a list.
+-- The list does not allow duplicates and the names are sorted
+-- in alphabetical order.
+-- 
+-- @param   charList  the list to add to.
+-- @param   charName  the character name to add.
+-- 
+-- @return  true if the name was added as a new entry, otherwise returns false.
+function TT:AddCharacterToList(charList, charName)
+  for index, name in pairs(charList) do
+    if (name == charName) then
+      return false;
+    end
+  end
+  
+  table.insert(charList, charName);
+  table.sort(charList);
+  return true;
+end
+
+------------------------------------------------------------
+-- Removes a character name from a list.
+-- 
+-- @param   charList  the list to remove from.
+-- @param   charName  the character name to remove.
+-- 
+-- @return  true if the name was removed, otherwise returns false. 
+function TT:RemoveCharacterFromList(knownCharList, tgtCharName)
+  for index, charName in pairs(knownCharList) do
+    if (charName == tgtCharName) then
+      table.remove(knownCharList, index);
+      return true;
+    end
+  end
+  return false;
+end
+
+------------------------------------------------------------
+-- PUBLIC METHODS
 ------------------------------------------------------------
 
-EVENT_MANAGER:RegisterForEvent(TT.name, EVENT_ADD_ON_LOADED, onAddOnLoaded);
+------------------------------------------------------------
+-- Registers a callback for one of this library's custom events.
+-- 
+-- @param   the name of the event.
+-- @param   the callback function.
+function TT:RegisterCallback(event, callback)
+  local validEvent = false;
+  for e, name in pairs(EVENTS) do
+    if (name == event) then
+      validEvent = true;
+      break;
+    end
+  end
+  
+  if not validEvent then
+    return
+  end
+  
+  if (type(callback) == 'function') then
+    CM:RegisterCallback(event, callback);
+  end
+end
+
+setupToolTipHooks();
