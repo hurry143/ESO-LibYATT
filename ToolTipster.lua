@@ -21,8 +21,9 @@ local HOOKS = {
   { ItemTooltip, 'SetQuestReward', GetQuestRewardItemLink },
   { ItemTooltip, 'SetLink', function(itemLink) return itemLink end },
   { PopupTooltip, 'SetLink', function(itemLink) return itemLink end },
+  { PopupTooltip, 'SetLink', function(itemLink) return itemLink end },
   { ZO_AlchemyTopLevelTooltip, 'SetPendingAlchemyItem', GetAlchemyResultingItemLink },
-  { ZO_SmithingTopLevelCreationPanelResultTooltip, 'SetPendingSmithingItem', GetSmithingPatternResultLink },
+  { ZO_ProvisionerTopLevelTooltip, 'SetProvisionerResultItem', GetRecipeResultItemLink },
   { ZO_SmithingTopLevelImprovementPanelResultTooltip, 'SetSmithingImprovementResult', GetSmithingImprovedItemLink }
 };
 
