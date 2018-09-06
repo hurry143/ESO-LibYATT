@@ -25,7 +25,10 @@ local HOOKS = {
   { ZO_EnchantingTopLevelTooltip, 'SetPendingEnchantingItem', GetEnchantingResultingItemLink },
   { ZO_ProvisionerTopLevelTooltip, 'SetProvisionerResultItem', GetRecipeResultItemLink },
   { ZO_SmithingTopLevelCreationPanelResultTooltip, 'SetPendingSmithingItem', GetSmithingPatternResultLink },
-  { ZO_SmithingTopLevelImprovementPanelResultTooltip, 'SetSmithingImprovementResult', GetSmithingImprovedItemLink }
+  { ZO_SmithingTopLevelImprovementPanelResultTooltip, 'SetSmithingImprovementResult', GetSmithingImprovedItemLink },
+  { GAMEPAD_TOOLTIPS:GetTooltip(GAMEPAD_LEFT_TOOLTIP), "LayoutItem", function(itemLink) return itemLink end },
+  { GAMEPAD_TOOLTIPS:GetTooltip(GAMEPAD_RIGHT_TOOLTIP), "LayoutItem", function(itemLink) return itemLink end },
+  { GAMEPAD_TOOLTIPS:GetTooltip(GAMEPAD_MOVABLE_TOOLTIP), "LayoutItem", function(itemLink) return itemLink end }
 };
 
 local EVENTS = {
