@@ -4,4 +4,4 @@
 ## Description: Library for hooking into item tooltips.
 ## APIVersion: 100024
 
-LibYATT\LibYATT.lua
+LibYATT.lua
