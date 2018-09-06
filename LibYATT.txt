@@ -1,0 +1,7 @@
+## Title: LibYATT
+## Version: 1.0
+## Author: hurry143
+## Description: Library for hooking into item tooltips.
+## APIVersion: 100024
+
+LibYATT\LibYATT.lua

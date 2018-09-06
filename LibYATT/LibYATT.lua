@@ -1,4 +1,4 @@
-local MAJOR, MINOR = 'YATT', 1;
+local MAJOR, MINOR = 'LibYATT', 1;
 local YATT, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 -- Do not load this file if the same version (or newer) of the library has been found.
 if not YATT then
@@ -29,7 +29,7 @@ local HOOKS = {
 };
 
 local EVENTS = {
-  YATT_EVENT_ITEM_TOOLTIP = 'YATT_EVENT_ITEM_TOOLTIP',
+  EVENT_ITEM_TOOLTIP = 'YATT_EVENT_ITEM_TOOLTIP',
 };
 YATT.events = EVENTS;
 
@@ -50,7 +50,7 @@ local CM = ZO_CallbackObject:New(); -- our custom callback manager.
 -- @param link    the itemlink of the item.
 local function showToolTip(control, link)
   -- For now, just fire off the callbacks.
-  CM:FireCallbacks(EVENTS.YATT_EVENT_ITEM_TOOLTIP, control, link);
+  CM:FireCallbacks(EVENTS.EVENT_ITEM_TOOLTIP, control, link);
 end
 
 ------------------------------------------------------------
